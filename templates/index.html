@@ -1,0 +1,74 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; ➥ charset=utf-8”/>
+    <title>Deep-Tac-Toe</title>
+</head>
+<body>
+    <div id="board">
+        <table id="boardtable" summary="TTT board">
+            {% for row in [0,1,2] %}
+            
+            <tr> {% for col in [0,1,2] %}
+                <td>
+                    {% set var1 = 3*row+col %}
+                    {% set buttonid = [var1, var2]|join %}
+                    <button id={{buttonid}} name=button
+                        value={{var1}}>.</button> 
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <div id="resetdiv">
+        <button id="resetbutton" name="reset">RESET</button>
+    </div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script> 
+<script>
+var boardstate = "000000000000000000";
+$('#boardtable').find('button').click(function(){
+        var x= Number($(this).val())
+        var pre = boardstate.substring(0,x)
+        var post = boardstate.substring(x+1)
+        boardstate = pre + "1" +  post
+        console.log(boardstate)
+        console.log(post)
+        alert(boardstate)
+        $.ajax({'url' : '/submit',
+                'type' : 'GET',
+                'data' : {'boardvec' : boardstate},
+                'success' : function(data)
+                {
+                    boardstate = data['statevec']            
+                    updateimages()
+                } 
+                })
+                
+        });
+$('#resetbutton').click(function(){
+    boardstate = "000000000000000000"
+    updateimages()
+    })
+function updateimages(){
+    for(var i=0;i<9;i++)
+    {
+        if(boardstate[i]==1)
+        {
+            $('#'+parseInt(i)).text("X")
+        }
+        else if(boardstate[i+9]==1)
+        {
+            $('#'+parseInt(i)).text("O")
+        }
+        else
+        {
+            $('#'+parseInt(i)).text(".")
+        }
+    }
+}
+</script>
+</body>
+
+
+</html>

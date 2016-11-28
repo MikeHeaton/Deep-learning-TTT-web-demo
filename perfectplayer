@@ -1,0 +1,77 @@
+class ttt_MinMaxPlayer(ttt_PerfectPlayer):
+    def __init__(self, playernumber):
+        self.playerno = playernumber
+        self.playdict = {}
+
+    def play(self, statevec, legalmask, epsilon=0):
+        self.mylayer = statevec[:9].reshape([3,3])
+        self.oplayer = statevec[9:].reshape([3,3])
+        bestplay = self._minmax(self.playerno, self.mylayer, self.oplayer,-3,3)
+
+        m = 3*bestplay[0] + bestplay[1]
+        playvec = np.zeros([9])
+        playvec[m] = 1
+        return playvec, playvec
+
+    def _allowableplays(self, playerlayer, oplayer):
+        allowables = [(i,j) for i in [0,1,2] for j in [0,1,2] if
+                      (playerlayer + oplayer)[i][j] == 0]
+        return allowables
+
+    def _apply(self, pos, curplayer, playerlayers):
+        layers = [playerlayers[0].copy(), playerlayers[1].copy()]
+        layers[curplayer][pos[0],pos[1]] = 1
+        return layers
+
+    def _minmax(self, curplayer, p0layer, p1layer, alpha, beta):
+
+        statevector = (  "".join([str(p0layer[i][j]) for i in [0,1,2] for j in
+                           [0,1,2]])
+                               +
+                        "".join([str(p1layer[i][j]) for i in [0,1,2] for j in
+                               [0,1,2]])  )
+        print(statevector)
+        if statevector in self.playdict:
+            return self.playdict[statevector]
+
+        winner = self._haswon(p0layer, p1layer)
+        if winner != 0:
+            self.playdict[statevector] = (0, winner)
+            return (0, winner)
+        elif self._hasdrawn(p0layer, p1layer):
+            self.playdict[statevector] = (0, 0)
+            return (0, 0)
+        else:
+            allowables = self._allowableplays(p0layer, p1layer)
+            np.random.shuffle(allowables)
+            layers = [p0layer, p1layer]
+
+            if curplayer == 1:
+                move = (3,3)
+                v = (-3, (3,3))
+                for (i,j) in allowables:
+                        v = max(v,
+                                (self._minmax(0,
+                                                *self._apply((i,j),curplayer,
+                                                             [p0layer,p1layer]),
+                                                                alpha, beta),
+                                 (i,j)),
+                                key = lambda x : x[0])
+                        alpha = max(alpha, v[0])
+                        if beta <= alpha:
+                            break
+            if curplayer == 0:
+                move = (3,3)
+                v = (3, (3,3))
+                for (i,j) in allowables:
+                    v = min(v,
+                            (self._minmax(0,
+                                            *self._apply((i,j),curplayer,
+                                                         [p0layer,p1layer]),
+                                                            alpha, beta),
+                             (i,j)),
+                            key = lambda x : x[0])
+                    beta = min(beta, v[0])
+                    if beta <= alpha:
+                        break
+            return v 
